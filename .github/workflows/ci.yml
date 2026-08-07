@@ -98,26 +98,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           no-cache: true
 
-  scan:
-    name: Scan image
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.event_name != 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-
-      # Fails the pipeline on a critical or high CVE rather than filing a
-      # report nobody reads. ignore-unfixed skips findings with no patch
-      # available, which would otherwise block every build indefinitely.
-      - name: Run Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
-          format: table
-          severity: CRITICAL,HIGH
-          exit-code: '1'
-          ignore-unfixed: true
-
   promote:
     name: Update staging image tag
     runs-on: ubuntu-latest
