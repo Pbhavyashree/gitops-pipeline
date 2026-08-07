@@ -32,4 +32,4 @@ ingress:
 # Written by CI on every merge to main. This line is the deployment trigger:
 # ArgoCD watches this file and reconciles the cluster when it changes.
 image:
-  tag: "sha-4a002d98df029821a3572ed41d1c137f63d6c2b3"
+  tag: "sha-bd1d09d7891e3f3855ff50a6420acfe765b6db19"
