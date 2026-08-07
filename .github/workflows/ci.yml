@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/task-api
+  IMAGE_NAME: pbhavyashree/task-api
 
 jobs:
   test:
