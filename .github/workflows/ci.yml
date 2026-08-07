@@ -111,7 +111,7 @@ jobs:
       # report nobody reads. ignore-unfixed skips findings with no patch
       # available, which would otherwise block every build indefinitely.
       - name: Run Trivy
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
           format: table
