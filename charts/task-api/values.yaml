@@ -1,0 +1,100 @@
+# Base values. Environment overlays in values-staging.yaml and
+# values-production.yaml override only what differs, so the difference between
+# environments is visible at a glance rather than buried in duplicated files.
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/pbhavyashree/task-api
+  pullPolicy: IfNotPresent
+  # Empty so it falls back to Chart.appVersion. CI overrides this with the
+  # commit SHA — never "latest", because "latest" makes a rollout
+  # unreproducible and a rollback impossible.
+  tag: ""
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+config:
+  environment: local
+  logLevel: INFO
+
+# Run as an unprivileged user with a read-only root filesystem. Most container
+# escapes need either root or a writable filesystem; this removes both.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Requests are what the scheduler uses to place the pod; limits are what the
+# kernel enforces. CPU limits are deliberately generous relative to requests:
+# CPU is compressible, so throttling a latency-sensitive service to save a
+# fraction of a core is usually the wrong trade. Memory has request == limit
+# because memory is not compressible — exceeding it means an OOM kill.
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 128Mi
+
+probes:
+  startup:
+    failureThreshold: 30
+    periodSeconds: 2
+  liveness:
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  readiness:
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+terminationGracePeriodSeconds: 30
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+serviceMonitor:
+  enabled: false
+  interval: 15s
+  labels: {}
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: task-api.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

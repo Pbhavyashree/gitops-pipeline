@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: task-api-staging
+  namespace: argocd
+  finalizers:
+    # Ensures deleting the Application also removes what it deployed, rather
+    # than orphaning resources in the cluster.
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: task-api
+
+  source:
+    repoURL: https://github.com/Pbhavyashree/gitops-pipeline.git
+    targetRevision: main
+    path: charts/task-api
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-staging.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: task-api-staging
+
+  syncPolicy:
+    # Staging syncs automatically: the whole point is that main is always
+    # deployed here, so drift between git and cluster is caught immediately.
+    automated:
+      prune: true      # delete resources removed from git
+      selfHeal: true   # revert manual kubectl changes
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

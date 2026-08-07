@@ -1,0 +1,27 @@
+# Local cluster for developing the pipeline. Three nodes rather than one so
+# that pod anti-affinity and PodDisruptionBudgets behave as they would in a
+# real cluster — on a single node both are silently meaningless.
+
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: gitops-demo
+
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      # Maps the ingress controller onto localhost so the app is reachable
+      # from the host browser without port-forwarding.
+      - containerPort: 80
+        hostPort: 8080
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 8443
+        protocol: TCP
+  - role: worker
+  - role: worker

@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: task-api-production
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: task-api
+
+  source:
+    repoURL: https://github.com/Pbhavyashree/gitops-pipeline.git
+    # Pinned to a tag rather than a branch. Production should move when
+    # someone decides it moves, not whenever main changes.
+    targetRevision: v0.1.0
+    path: charts/task-api
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-production.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: task-api-production
+
+  syncPolicy:
+    # No automated block: production sync is manual, so a human approves the
+    # rollout. selfHeal is still worth having, but reverting drift is a
+    # different decision from shipping a new version, and conflating them is
+    # how you deploy something at 2am that nobody meant to.
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m

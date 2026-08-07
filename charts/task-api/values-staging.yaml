@@ -1,0 +1,35 @@
+# Staging: production-shaped but smaller. The point of staging is to catch
+# configuration mistakes, so it runs the same manifests with the same features
+# enabled — just fewer replicas.
+
+replicaCount: 2
+
+config:
+  environment: staging
+  logLevel: DEBUG
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+serviceMonitor:
+  enabled: true
+
+ingress:
+  enabled: true
+  hosts:
+    - host: staging.task-api.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+# Written by CI on every merge to main. This line is the deployment trigger:
+# ArgoCD watches this file and reconciles the cluster when it changes.
+image:
+  tag: ""

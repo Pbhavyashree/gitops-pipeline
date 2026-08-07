@@ -1,0 +1,22 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "task-api.fullname" . }}
+  labels:
+    {{- include "task-api.labels" . | nindent 4 }}
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  # Tells the Prometheus Operator to scrape this service. Declaring the scrape
+  # target alongside the workload means a new service is monitored the moment
+  # it is deployed, rather than after someone remembers to edit Prometheus.
+  selector:
+    matchLabels:
+      {{- include "task-api.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: {{ .Values.serviceMonitor.interval }}
+{{- end }}

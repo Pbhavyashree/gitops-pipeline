@@ -1,0 +1,16 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "task-api.fullname" . }}
+  labels:
+    {{- include "task-api.labels" . | nindent 4 }}
+spec:
+  # Protects availability during voluntary disruptions such as a node drain
+  # during a cluster upgrade. Without this, draining a node can take every
+  # replica down at once.
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "task-api.selectorLabels" . | nindent 6 }}
+{{- end }}

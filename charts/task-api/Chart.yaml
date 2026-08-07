@@ -1,0 +1,13 @@
+apiVersion: v2
+name: task-api
+description: Task API deployed through a GitOps pipeline
+type: application
+
+# version is the chart version, appVersion is the application version.
+# They move independently: changing a probe threshold bumps version but not
+# appVersion.
+version: 0.1.0
+appVersion: "0.1.0"
+
+maintainers:
+  - name: Bhavyashree Prakash

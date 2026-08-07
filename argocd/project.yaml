@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: task-api
+  namespace: argocd
+spec:
+  description: Task API and its environments
+
+  # Restrict what this project may deploy and where. Without these, any
+  # Application in the project could deploy anything anywhere in the cluster,
+  # which defeats the purpose of having projects at all.
+  sourceRepos:
+    - https://github.com/Pbhavyashree/gitops-pipeline.git
+
+  destinations:
+    - namespace: task-api-staging
+      server: https://kubernetes.default.svc
+    - namespace: task-api-production
+      server: https://kubernetes.default.svc
+
+  # No cluster-scoped resources: this application has no business creating
+  # ClusterRoles or CRDs.
+  clusterResourceWhitelist: []
+
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ConfigMap
+    - group: apps
+      kind: Deployment
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: monitoring.coreos.com
+      kind: ServiceMonitor

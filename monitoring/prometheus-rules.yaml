@@ -1,0 +1,59 @@
+# Alerting rules. Each alert answers "what would make me want to be woken up?"
+# — symptom-based rather than cause-based, because there are many causes of a
+# service being slow and only one thing users care about.
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: task-api
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: task-api.availability
+      rules:
+        - alert: TaskApiHighErrorRate
+          # 5% of requests failing. Rate over 5m rather than an instant value,
+          # so a single blip does not page anyone.
+          expr: |
+            sum(rate(http_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m])) > 0.05
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Task API error rate above 5%"
+            description: "{{ $value | humanizePercentage }} of requests are returning 5xx."
+
+        - alert: TaskApiHighLatency
+          # p95 rather than mean: an average of 100ms can hide a tenth of
+          # users waiting three seconds.
+          expr: |
+            histogram_quantile(
+              0.95,
+              sum(rate(http_request_duration_seconds_bucket[5m])) by (le)
+            ) > 0.5
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Task API p95 latency above 500ms"
+
+        - alert: TaskApiPodRestarting
+          expr: increase(kube_pod_container_status_restarts_total{container="task-api"}[15m]) > 3
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Task API pod restarting repeatedly"
+            description: "Often a failing liveness probe or an OOM kill."
+
+        - alert: TaskApiNoReplicasAvailable
+          expr: kube_deployment_status_replicas_available{deployment="task-api"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Task API has no available replicas"
