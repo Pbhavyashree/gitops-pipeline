@@ -139,3 +139,7 @@ Trivy on every push to main.
   cluster rather than duplicating manifests
 - **SLO-based alerting** with error budgets, replacing fixed thresholds that are
   guesses at what "too slow" means
+  - **Image scanning in CI** with Trivy, failing the build on fixable HIGH and
+  CRITICAL CVEs. This needs a proper lockfile first — pinning a transitive
+  dependency in requirements.txt does not reliably reach the built image, so
+  the scan reported patched packages as still vulnerable
