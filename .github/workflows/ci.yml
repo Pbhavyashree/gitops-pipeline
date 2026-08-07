@@ -104,24 +104,20 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name != 'pull_request'
-    permissions:
-      contents: read
-      security-events: write
     steps:
       - uses: actions/checkout@v4
 
+      # Fails the pipeline on a critical or high CVE rather than filing a
+      # report nobody reads. ignore-unfixed skips findings with no patch
+      # available, which would otherwise block every build indefinitely.
       - name: Run Trivy
         uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
-          format: sarif
-          output: trivy-results.sarif
+          format: table
           severity: CRITICAL,HIGH
-
-      - name: Upload results
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: trivy-results.sarif
+          exit-code: '1'
+          ignore-unfixed: true
 
   promote:
     name: Update staging image tag
